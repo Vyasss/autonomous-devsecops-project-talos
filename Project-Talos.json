@@ -1,0 +1,323 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ab291536-a5de-4448-92f4-00d3b2ab8f1d",
+        "options": {
+          "noResponseBody": false
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "c2891917-580d-41f5-ab30-90126d221570",
+      "name": "Webhook",
+      "webhookId": "ab291536-a5de-4448-92f4-00d3b2ab8f1d"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0b0cc801-32f0-422b-9110-918266c44daa",
+              "leftValue": "={{ $json.body.head_commit.modified[0] }}",
+              "rightValue": ".py",
+              "operator": {
+                "type": "string",
+                "operation": "endsWith"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "0703aca0-66aa-44a3-8d66-f940f2fec8e4",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior Lead Developer and Python Interpreter.\nA new commit was detected.\n\nRepository: {{ $json.body.repository.full_name }}\nFile Name: {{ $json.body.head_commit.modified[0] }}\nCommit SHA: {{ $json.body.head_commit.id }}\n\n### PHASE 1: GET DATA (THE PRECISION STEP) ###\n1. Construct the URL for this SPECIFIC commit: https://api.github.com/repos/{{ $json.body.repository.full_name }}/contents/{{ $json.body.head_commit.modified[0] }}?ref={{ $json.body.head_commit.id }}\n2. Use the \"HTTP Request\" tool to GET the raw code from that URL.\n3. Construct the URL for the root directory: https://api.github.com/repos/{{ $json.body.repository.full_name }}/contents/\n4. Use the \"HTTP Request\" tool to GET the file list.\n\n### PHASE 2: AUDIT ###\n1. **SYNTAX CHECK (Priority #1):** Look for typos (like 'tr' vs 'try'), missing colons, indentation errors, or broken logic.\n2. **SECURITY CHECK:** Look for vulnerabilities (SQL Injection, hardcoded keys).\n3. **DEPENDENCY CHECK:** If imports exist, check the file list for 'requirements.txt'.\n\n### REPORT FORMAT ###\n\nSECTION 1: SYNTAX & SECURITY\n[If Syntax Error found: ❌ CRITICAL SYNTAX ERROR: (Describe error). Fixed Code: (Provide fix)]\n[If Security Issue found: ⚠️ VULNERABILITY: (Describe). Fixed Code: (Provide fix)]\n[If Clean: ✅ Code looks valid.]\n\nSECTION 2: DEPENDENCY CHECK\n[If requirements.txt is missing: ⚠️ Missing requirements.txt. Create it with this content: (List)]\n[If found: ✅ Dependencies OK]",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        416,
+        -96
+      ],
+      "id": "d8937ad8-2cb6-4a40-9e60-908133543150",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        256,
+        224
+      ],
+      "id": "73976af4-1462-45fa-9d95-c380f94feee9",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "yvr6Ohfh5ICFVB1w",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.body.head_commit.id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        448,
+        240
+      ],
+      "id": "af26f97c-f26e-4136-999a-74fea9cca700",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "toolDescription": "You are a Senior Lead Developer.\nA new commit was detected.\n\nRepository: {{ $json.body.repository.full_name }}\nFile Name: {{ $json.body.head_commit.modified[0] }}\n\nTASK 1: AUDIT THE CODE (Security & Logic)\n- Construct URL: https://api.github.com/repos/{{ $json.body.repository.full_name }}/contents/{{ $json.body.head_commit.modified[0] }}\n- GET the code and audit it.\n\nTASK 2: CHECK DEPENDENCIES (The Safe Way)\n- First, GET the file list of the root directory: https://api.github.com/repos/{{ $json.body.repository.full_name }}/contents/\n- Look at the list. Is 'requirements.txt' inside?\n- IF MISSING: Generate the content for it based on the imports in the code.\n- IF FOUND: Ignore this task.\n\nRETURN A SINGLE REPORT WITH TWO SECTIONS (Security & Dependencies).",
+        "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL', ``, 'string') }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        688,
+        192
+      ],
+      "id": "5d69b9a2-5654-4a34-82e8-025119ebc824",
+      "name": "HTTP Request",
+      "credentials": {
+        "githubApi": {
+          "id": "HdveeesgbRW9MTnk",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Use this tool to execute JavaScript code snippets to test logic or validate regular expressions before deployment.",
+        "jsCode": "try {\n  // 1. Check if we are just testing (no AI input yet)\n  if (typeof query === 'undefined') {\n    return \"Test successful! I am ready for the AI.\";\n  }\n\n  // 2. Run the code\n  const result = eval(query);\n\n  // 3. Convert result to text (Fixes 'Wrong output type' error)\n  return String(result);\n\n} catch (error) {\n  return \"Error executing code: \" + error.message;\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.3,
+      "position": [
+        560,
+        224
+      ],
+      "id": "1eb9cb66-ae07-4df2-962c-47f3d2c9c431",
+      "name": "Code Tool"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Use this tool to search the existing codebase for security patterns, authentication helper functions, and database connection logic. The agent must query this to understand how the application handles sensitive data before proposing a security patch.",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "n8n",
+          "mode": "list",
+          "cachedResultName": "n8n"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        816,
+        128
+      ],
+      "id": "b2e93d88-a1b6-4c2d-964c-3166e85e4d55",
+      "name": "Pinecone Vector Store",
+      "credentials": {
+        "pineconeApi": {
+          "id": "NppHx4hq3BGRNen0",
+          "name": "PineconeApi account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        832,
+        336
+      ],
+      "id": "6bffaebd-9d39-42c0-9025-d53096cd382a",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "yvr6Ohfh5ICFVB1w",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "chetanvyas0220@gmail.com",
+        "subject": "Alert: Vulnerability Report",
+        "emailType": "text",
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        912,
+        -96
+      ],
+      "id": "80661ea5-7f15-4cc6-979c-6a3a676d8d93",
+      "name": "Send a message",
+      "webhookId": "bd644edb-79b4-4601-8c25-2f8bd0184da6",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "rPfCB3TKz38eduXz",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "26073975-38fe-4a1b-8112-c9f784e78cd0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "56d05d8d68414bf6c08e6288ef13ac5939db86952090d53c6d462077eed30b1f"
+  },
+  "id": "t6jjEsAAUkCQ2Szz",
+  "tags": []
+}
