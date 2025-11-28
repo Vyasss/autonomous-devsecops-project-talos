@@ -1,8 +1,7 @@
-# 🛡️ Sentinel: Autonomous DevSecOps Agent
+# 🛡️ Project Talos: Autonomous DevSecOps Agent
 
-**Sentinel** is an intelligent, self-healing infrastructure agent designed to audit code commits in real-time. It acts as a "Gatekeeper" for software repositories, automatically detecting security vulnerabilities, logic errors, and missing dependencies before they reach production.
+**Project Talos** is an intelligent, self-healing infrastructure agent designed to audit code commits in real-time. It acts as a "Gatekeeper" for software repositories, automatically detecting security vulnerabilities, logic errors, and missing dependencies before they reach production.
 
-![Architecture Diagram](architecture_diagram.png)
 
 ## 🚀 How It Works
 
@@ -39,4 +38,4 @@ This system leverages **Event-Driven Architecture** using **n8n** and **Google G
 5.  Set the Webhook URL in your target GitHub repository.
 
 ---
-*Created by [Your Name]*
+*Created by Chetan Vyas*
